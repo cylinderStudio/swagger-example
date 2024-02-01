@@ -33,6 +33,7 @@ paths:
           description: product barcode
           schema: 
             type: string
+            example: 7304X33541737095
         - name: bin
           in: query
           style: form
@@ -40,12 +41,14 @@ paths:
           description: current bin location
           schema: 
             type: string
+            example: D211
         - name: order
           in: query
           style: form
           explode: true
           schema: 
             type: string
+            example: 145
       responses:
         '200':
           description: OK
@@ -169,6 +172,7 @@ paths:
           description: product barcode
           schema: 
             type: string
+            example: Matt Murphy
         - name: barcode
           in: query
           style: form
@@ -176,6 +180,7 @@ paths:
           description: associate's security badge barcode
           schema: 
             type: string
+            example: P-8-A702B241
         - name: station
           in: query
           style: form
@@ -183,6 +188,7 @@ paths:
           description: currently assigned workstation
           schema: 
             type: string
+            example: 2A
       responses:
         '200':
           description: OK
@@ -242,7 +248,7 @@ components:
       properties: 
         name:
           type: string
-          example: Bruce Wayne
+          example: Matt Murphy
         barcode:
           type: string
           example: P-8-A702B241
