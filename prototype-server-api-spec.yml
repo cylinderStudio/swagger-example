@@ -1,0 +1,160 @@
+openapi: 3.0.2
+info:
+  title: Prototype Server API
+  description: |-
+    In AFT UX, we build prototypes that must feature a high level of portability between the lab and production environments. This is due to the significant differences between available hardware and the inability to connect prototypes to networks in fulfillment centers. 
+
+    To provide access to testing data, the prototypes we build are served by our custom wireless server consisting of a PC device hardwired to a Wi-Fi router that we carry into the field. It creates a local network for either wired or wireless access to the Prototype Server API which avoids the need for a network connection.
+
+    ### Conventions
+    - Endpoints names are in camel case and indicate the action and target collection (e.g., findProducts)
+    - All parameter names are lowercase. There are no multi-word parameter names, so snake case is not utilized. 
+    - All parameters are included in each response. Empty parameters will always be shown and reported as `null`
+  version: 1.2.0
+servers:
+  - url: http://192.168.1.2:3000/api/v1
+tags: 
+  - name: products
+    description: Test product inventory data
+  - name: associates
+paths:
+  /findProducts:
+    get:
+      tags: 
+        - products
+      summary: Find product by query parameters
+      description: Returns a product or list of products matching parameters
+      parameters:
+        - name: barcode
+          in: query
+          style: form
+          explode: true
+          required: false
+          description: product barcode
+          schema: 
+            type: string
+            example: 7304X33541737095
+        - name: bin
+          in: query
+          style: form
+          explode: true
+          required: false
+          description: current bin location
+          schema: 
+            type: string
+            example: D211
+        - name: order
+          in: query
+          style: form
+          explode: true
+          required: false
+          description: customer order ID 
+          schema: 
+            type: string
+            example: 145
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid parameter supplied
+        '404': 
+          description: Product with matching parameter(s) not found
+  /insertProducts:
+    post: 
+      tags:
+        - products
+      summary: Insert a product
+      description: Create a new product in the database
+      requestBody:
+        content: 
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/NewProduct'
+            example:
+              barcode: 7304X33541737095
+              item: Super Mario Maker - Nintendo Switch
+              multi: false
+              status: intake
+      responses:
+        '200': 
+          description: OK
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/Product'
+              example:
+                barcode: 7304X33541737095
+                aisle: null
+                bin: null
+                item: Super Mario Maker - Nintendo Switch
+                tag: null
+                multi: false
+                order: null
+                rack: null
+                associate: null
+                status: intake
+        '400': 
+          description: Bad request or malformed syntax
+        '422': 
+          description: Could not validate one or more product field types
+components:
+  schemas:
+    Product: 
+      type: object
+      properties: 
+        barcode:
+          type: string
+          example: 7304X33541737095
+        aisle:
+          type: string
+          example: E07
+        bin:
+          type: string
+          example: D211
+        item:
+          type: string
+          example: Super Mario Maker - Nintendo Switch
+        tag: 
+          type: string
+          example: 4173 704C 5135 354A 3653 363D
+        multi:
+          type: boolean
+          example: false
+        order:
+          type: string
+          example: 145
+        rack:
+          type: string
+          example: C3
+        associate:
+          type: string
+          example: Matt Murphy
+        status:
+          type: string
+          example: pick
+    NewProduct: 
+      type: object
+      required:
+        - barcode
+        - item
+        - multi
+        - status
+      properties: 
+        barcode:
+          type: string
+          example: 7304X33541737095
+        bin:
+          type: string
+          example: D211
+        item:
+          type: string
+          example: Super Mario Maker - Nintendo Switch
+        status:
+          type: string
+          example: intake
