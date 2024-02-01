@@ -169,7 +169,7 @@ paths:
           in: query
           style: form
           explode: true
-          description: product barcode
+          description: associate's name
           schema: 
             type: string
             example: Matt Murphy
@@ -185,7 +185,7 @@ paths:
           in: query
           style: form
           explode: true
-          description: currently assigned workstation
+          description: associate's currently assigned workstation
           schema: 
             type: string
             example: 2A
