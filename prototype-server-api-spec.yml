@@ -4,54 +4,48 @@ info:
   description: |-
     In AFT UX, we build prototypes that must feature a high level of portability between the lab and production environments. This is due to the significant differences between available hardware and the inability to connect prototypes to networks in fulfillment centers. 
 
-    To provide access to testing data, the prototypes we build are served by our custom wireless server consisting of a PC device hardwired to a Wi-Fi router that we carry into the field. It creates a local network for either wired or wireless access to the Prototype Server API which avoids the need for a network connection.
+    To provide access to testing data, the prototypes we build are served by our custom wireless database server consisting of a PC device hardwired to a Wi-Fi router that we carry into the field. It creates a local network for either wired or wireless access to the Prototype Server API which avoids the need for a network connection.
 
     ### Conventions
-    - Endpoints names are in camel case and indicate the action and target collection (e.g., findProducts)
-    - All parameter names are lowercase. There are no multi-word parameter names, so snake case is not utilized. 
-    - All parameters are included in each response. Empty parameters will always be shown and reported as `null`
+    - Endpoints names are in camel case and indicate the action and target collection (e.g., findProducts).
+    - All parameter and field names are lowercase. There are no multi-word parameter names, so snake case is not utilized. 
+    - All fields are included in each response. Empty fields will always be shown and reported as `null`.
   version: 1.2.0
 servers:
   - url: http://192.168.1.2:3000/api/v1
 tags: 
   - name: products
-    description: Test product inventory data
+    description: Mock product inventory data
   - name: associates
+    description: Mock associate data
 paths:
   /findProducts:
     get:
       tags: 
         - products
       summary: Find product by query parameters
-      description: Returns a product or list of products matching parameters
+      description: Returns a product or list of products
       parameters:
         - name: barcode
           in: query
           style: form
           explode: true
-          required: false
           description: product barcode
           schema: 
             type: string
-            example: 7304X33541737095
         - name: bin
           in: query
           style: form
           explode: true
-          required: false
           description: current bin location
           schema: 
             type: string
-            example: D211
         - name: order
           in: query
           style: form
           explode: true
-          required: false
-          description: customer order ID 
           schema: 
             type: string
-            example: 145
       responses:
         '200':
           description: OK
@@ -65,20 +59,21 @@ paths:
           description: Invalid parameter supplied
         '404': 
           description: Product with matching parameter(s) not found
-  /insertProducts:
+  /insertProduct:
     post: 
       tags:
         - products
       summary: Insert a product
-      description: Create a new product in the database
+      description: The prototype workstation hardware can only scan one barcode at a time, so this endpoint is limited to adding one product per POST. 
       requestBody:
         content: 
           application/json:
             schema: 
-              $ref: '#/components/schemas/NewProduct'
+              $ref: '#/components/schemas/Product'
             example:
               barcode: 7304X33541737095
               item: Super Mario Maker - Nintendo Switch
+              tag: 4173 705A 5232 574A 3746 4A49
               multi: false
               status: intake
       responses:
@@ -93,7 +88,7 @@ paths:
                 aisle: null
                 bin: null
                 item: Super Mario Maker - Nintendo Switch
-                tag: null
+                tag: 4173 705A 5232 574A 3746 4A49
                 multi: false
                 order: null
                 rack: null
@@ -103,9 +98,113 @@ paths:
           description: Bad request or malformed syntax
         '422': 
           description: Could not validate one or more product field types
+  /updateProduct/{tag}:
+    post: 
+      tags:
+        - products
+      summary: Update a product
+      description: The prototype workstation can only scan one barcode at a time, so this endpoint is limited to updating one product per POST.
+      parameters:
+        - name: tag
+          in: path
+          description: unique tag ID of product to be updated 
+          required: true
+          schema:
+            type: string
+        - name: bin 
+          in: query 
+          description: unique bin location of product to be updated 
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: unique customer order number of product to be updated
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: current status of product to be updated 
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Product'
+        '400': 
+          description: Invalid product tag
+  /deleteProduct/{tag}:
+    delete:
+        tags:
+          - products
+        summary: Deletes a product
+        description: The prototype workstation hardware can only scan one barcode at a time, so this endpoint is limited to adding one product per DELETE.
+        parameters:
+          - name: tag
+            in: path
+            description: unique tag ID of product to be deleted 
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: OK
+          '400': 
+            description: Invalid product tag
+  /findAssociates:
+    get:
+      tags: 
+        - associates
+      summary: Find associate by query parameters
+      description: Returns an associate or list of associates
+      parameters:
+        - name: name
+          in: query
+          style: form
+          explode: true
+          description: product barcode
+          schema: 
+            type: string
+        - name: barcode
+          in: query
+          style: form
+          explode: true
+          description: associate's security badge barcode
+          schema: 
+            type: string
+        - name: station
+          in: query
+          style: form
+          explode: true
+          description: currently assigned workstation
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Associate'
+        '400':
+          description: Invalid parameter supplied
+        '404': 
+          description: Associate with matching parameter(s) not found
 components:
   schemas:
     Product: 
+      required: 
+        - barcode
+        - item
+        - tag
+        - multi
+        - status
       type: object
       properties: 
         barcode:
@@ -138,23 +237,21 @@ components:
         status:
           type: string
           example: pick
-    NewProduct: 
+    Associate: 
       type: object
-      required:
-        - barcode
-        - item
-        - multi
-        - status
       properties: 
+        name:
+          type: string
+          example: Bruce Wayne
         barcode:
           type: string
-          example: 7304X33541737095
-        bin:
+          example: P-8-A702B241
+        station:
           type: string
-          example: D211
-        item:
-          type: string
-          example: Super Mario Maker - Nintendo Switch
-        status:
-          type: string
-          example: intake
+          example: 2A
+        faults:
+          type: number
+          example: 0
+        trained: 
+          type: boolean
+          example: true
